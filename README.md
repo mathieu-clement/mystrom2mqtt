@@ -42,7 +42,7 @@ mqtt:
       state_topic: "mystrom/A4CF12FA3802/relay"
       command_topic: "mystrom/A4CF12FA3802/relay/command"
       json_attributes_topic: "mystrom/A4CF12FA3802/info"
-	
+  
   switch:
     - name: "Hi-Fi"
       unique_id: "mystrom_hifi"
