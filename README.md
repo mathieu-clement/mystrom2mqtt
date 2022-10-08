@@ -28,7 +28,13 @@ The `./docker-run.sh` shows how you can run this container (you might need to ru
 
 ## Home Assistant Configuration
 
-We'll use the MQTT integration (you'll have to install it first). Then define the following in your `configuration.yaml`:
+### MQTT installation
+
+We'll use the MQTT integration (you'll have to install it first and configure it to talk to your broker). 
+
+### Add your switches
+
+Define the following in your `configuration.yaml`:
 
 ```yaml
 mqtt:
@@ -55,6 +61,24 @@ mqtt:
       json_attributes_topic: "mystrom/C82B9627CD8A/info"
 ```
 
+Note that I've defined the name and icon in YAML, but you can do it in the UI later.
+
+Restart Home Assistant. Then head to the "Integrations" page and you should see two new entities in MQTT.
+
+### Refresh entity attributes
+
+You can use the "Configure" page of the MQTT integration in Home Assistant to send the following message:
+
+```
+topic: mystrom/C82B9627CD8A/relay/command
+payload: announce
+```
+
+This will refresh the attributes of that particular entity ("C82B9627CD8A").
+
+You can also listen to the topic `/mystrom/C82B9627CD8A/info` to see the result, or just inspect the entity and look at the attributes.
+
+Please note that this is entirely **optional**. There's no purpose to this but to geek out and check some of the device settings. It could be useful to find out the IP address from within HA or check the Wi-Fi signal strength.
 
 ## Setting up the web hook on switches
 
