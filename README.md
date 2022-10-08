@@ -32,27 +32,27 @@ We'll use the MQTT integration (you'll have to install it first). Then define th
 
 ```yaml
 mqtt:
-	light:
-	  - name: "Pendant"
-	    unique_id: "mystrom_pendant"
-	    icon: "mdi:lamp"
-	    payload_on: "on"
-	    payload_off: "off"
-	    qos: 2
-	    state_topic: "mystrom/A4CF12FA3802/relay"
-	    command_topic: "mystrom/A4CF12FA3802/relay/command"
-	    json_attributes_topic: "mystrom/A4CF12FA3802/info"
+  light:
+    - name: "Pendant"
+      unique_id: "mystrom_pendant"
+      icon: "mdi:lamp"
+      payload_on: "on"
+      payload_off: "off"
+      qos: 2
+      state_topic: "mystrom/A4CF12FA3802/relay"
+      command_topic: "mystrom/A4CF12FA3802/relay/command"
+      json_attributes_topic: "mystrom/A4CF12FA3802/info"
 	
-	switch:
-	  - name: "Hi-Fi"
-	    unique_id: "mystrom_hifi"
-	    icon: "mdi:speaker-wireless"
-	    payload_on: "on"
-	    payload_off: "off"
-	    qos: 2
-	    state_topic: "mystrom/C82B9627CD8A/relay"
-	    command_topic: "mystrom/C82B9627CD8A/relay/command"
-	    json_attributes_topic: "mystrom/C82B9627CD8A/info"
+  switch:
+    - name: "Hi-Fi"
+      unique_id: "mystrom_hifi"
+      icon: "mdi:speaker-wireless"
+      payload_on: "on"
+      payload_off: "off"
+      qos: 2
+      state_topic: "mystrom/C82B9627CD8A/relay"
+      command_topic: "mystrom/C82B9627CD8A/relay/command"
+      json_attributes_topic: "mystrom/C82B9627CD8A/info"
 ```
 
 
