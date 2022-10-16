@@ -92,8 +92,6 @@ So here's the workaround we'll use to get around this limitation:
 
 ### Environment variables (Polling)
 
-*This feature is a work in progress...*
-
 | Environment variable | Description | Sample value |
 | -------------------- | ----------- | ------------ |
 | `POLLING_PERIOD` | How often to ping the device (in seconds) <br/> Set to `-1` to disable. | `60` |

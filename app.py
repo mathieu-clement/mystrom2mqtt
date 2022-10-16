@@ -1,124 +1,15 @@
 #!/usr/bin/env python3
 
-import json
+import ischedule
 import logging
 import os
 import paho.mqtt.client as mqtt
-import subprocess
+import sys
 
+# Local packages
+from scheduler import Scheduler
+from switch import Switch
 
-class HttpException(Exception):
-    def __init__(self, message, exit_code, response=None):
-        super().__init__(message)
-        self.message = message
-        self.exit_code = exit_code
-        self.response = response
-
-
-class HttpClient:
-    """
-    Some hosts (such as my Swisscom Home Switch) refuse anything with the "Accept-Encoding" header
-    and I couldn't find a way to prevent the HTTP libraries in Python
-    to send them.
-    Curl, in comparison, does not send it by default.
-
-    This is an http client that relies on curl to make requests.
-    """
-
-    def get(self, url):
-        logging.debug('HTTP request: ' + url)
-        process = subprocess.Popen(['curl', '--location', '--max-time', str(5), '-s', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        response = stdout.decode('utf-8')
-        logging.debug("Host response: " + response)
-        logging.debug("curl return code: " + str(process.returncode))
-
-        if process.returncode != 0:
-            message = None
-            if process.returncode == 7:
-                message = "Failed to connect to host"
-            elif process.returncode == 28:
-                message = "The request timed out"
-            elif process.returncode != 0:
-                message = "curl exited with code " + str(process.returncode)
-
-            raise HttpException(message, process.returncode, response)
-
-        return response
-
-
-
-class Switch:
-    """
-    A Switch that can be turned on or off
-    """
-
-    def __init__(self, identifier, host):
-        """
-        Parameters
-        ----------
-        identifier : string
-            Identifier of the switch, typically the uppercase MAC address without colons (:)
-
-        host: string
-            the IP address or hostname
-        """
-        self.identifier = identifier
-        self.host = host
-        self.http_client = HttpClient()
-        self._get_report()
-        self._get_info()
-
-
-    def turn_on(self):
-        logging.info("Turning on " + str(self))
-        self._change_state(1)
-
-
-    def turn_off(self):
-        logging.info("Turning off " + str(self))
-        self._change_state(0)
-
-
-    def refresh_report(self):
-        logging.info("Refreshing state " + str(self))
-        self._get_report()
-
-
-    def _get_report(self):
-        url = 'http://' + self.host + '/report'
-        try:
-            response = self.http_client.get(url)
-            self.is_on = json.loads(response)['relay']
-        except HttpException as e:
-            logging.error(e.message)
-
-
-    def refresh_info(self):
-        logging.info("Refreshing info " + str(self))
-        self._get_info()
-
-
-    def _get_info(self):
-        url = 'http://' + self.host + '/info'
-        try:
-            response = self.http_client.get(url)
-            self.info = json.loads(response)
-        except HttpException as e:
-            logging.error(e.message)
-
-
-    def _change_state(self, state):
-        url = 'http://' + self.host + '/relay?state=' + str(state)
-        try:
-            self.http_client.get(url)
-        except HttpException as e:
-            logging.error(e.message)
-
-
-
-    def __repr__(self):
-        return "Switch('" + self.identifier + "','" + self.host + "')"
 
 
 class App:
@@ -143,7 +34,11 @@ class App:
             The port number of the broker. 1883 by default. 8883 (TLS) might work but it has not been tested.
         """
 
-        self.devices = devices # TODO verify identifier does not contain slashes
+        self.devices = devices  
+        # verify device identifier does not contain slashes
+        for device in self.devices:
+            if '/' in device.identifier:
+                raise Exception('Device identifiers may not contain forward slashes (/) but "%s" does' % (device.identifier,))
         self.devices_map = {device.identifier : device for device in devices}
 
         self.mqtt_client = mqtt.Client()
@@ -185,7 +80,7 @@ class App:
         elif payload == 'off':
             device.turn_off()
         elif payload == 'refresh':
-            pass
+            device.refresh_report()
         elif payload == 'announce':
             device.refresh_info()
             self.publish_new_info(device)
@@ -208,6 +103,18 @@ class App:
         self.mqtt_client.publish(topic, payload=payload, retain=False)
 
 
+    def refresh_all_devices(self):
+        for device in self.devices:
+            was_on_before = device.is_on
+            
+            device.refresh_report()
+            
+            was_on_after = device.is_on
+
+            if was_on_before != was_on_after:
+                self.publish_new_state(device)
+
+
 
 if __name__ == '__main__':
     level = logging.INFO
@@ -221,7 +128,7 @@ if __name__ == '__main__':
         else:
             raise Exception('Unknown log level: ' + os.environ['LOG_LEVEL'])
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=level)
-
+    
     # SWITCHES environment variable
     # contains a comma-separated list of switches. Each switch is represented by its MAC address (or any other identifier)
     # and its IP address or hostname separated by a colon.
@@ -232,14 +139,24 @@ if __name__ == '__main__':
         identifier, host = switch.split(':')
         switches.append(Switch(identifier, host))
 
-    # BROKER environment variables
+    # BROKER environment variable
     # specifies the broker IP address or hostname. See App.__init__ pydoc for more information if you wish to set a different port
     # than the default (1883).
     broker = os.environ['BROKER']
+    
+    app = App(switches, broker)
+
+    # POLLING_PERIOD environment variable, in seconds. Disabled by default.
+    # This controls how often the "/report" is fetched to update the device state.
+    # In practice, I would set this no shorter than 60 seconds, unless this information is used for an automation, in which case
+    # myStrom is probably the wrong tool for the job, you need a smart plug with webhook or MQTT capability out-of-the-box.
+    # The main purposes are tracking physical button presses and reading sensors (power usage and temperature).
+    polling_period = int(os.environ['POLLING_PERIOD'] if 'POLLING_PERIOD' in os.environ else -1)
+    if polling_period > 0:
+        Scheduler().run_periodically(target=app.refresh_all_devices, period=float(polling_period))
 
     # To test this app, you can use mosquitto_pub and mosquitto_sub. For example:
     # mosquitto_sub -h 192.168.0.2 -t 'mystrom/A4CF12FA3802/relay'
     # mosquitto_pub -h 192.168.0.2 -t 'mystrom/A4CF12FA3802/relay/command' -m 'on' 
 
-    app = App(switches, broker)
     app.loop_forever()
