@@ -1,4 +1,6 @@
-# MQTT proxy for myStrom Switches and Buttons (also compatible with the cheaper but similar Swisscom Home Smart Switch)
+# MQTT proxy for myStrom Switches
+
+UPDATE: For Button and Button+, I recommend [this project](https://github.com/home-assistant-ecosystem/mystrom2mqtt) instead.
 
 ## What is this?
 
@@ -127,7 +129,7 @@ instead of only `url` on the Swisscom Home switch.
   - myStrom Switch (only to turn on / off and report the state of the relay at the moment,
     power and temperature measurements are a work in progress)
   - Swisscom Home Switch (the device itself lacks power and temperature measurements)
-  - ~~myStrom Button~~ (work in progress)
+  - ~~myStrom Button~~ See note above
 
 There is visibly an older version of the myStrom switch. I can't confirm if it supports the same features as the second version.
 The same goes for the EU version (I have the CH version).
