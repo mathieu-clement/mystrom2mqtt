@@ -22,6 +22,7 @@ class Switch:
             the IP address or hostname
         """
         self.identifier = identifier
+        self.is_on = None
         self.host = host
         self.http_client = HttpClient()
         self._get_report()
