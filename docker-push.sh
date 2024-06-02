@@ -2,4 +2,4 @@
 
 set -eu
 
-docker push mathieuclement/mystrom2mqtt:latest
+docker push ghcr.io/mathieuclement/mystrom2mqtt:latest

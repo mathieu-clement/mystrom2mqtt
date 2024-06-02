@@ -7,4 +7,4 @@ docker run \
     -e 'POLLING_PERIOD=10' \
     --rm \
     --name mystrom2mqtt \
-    mathieuclement/mystrom2mqtt:latest
+    ghcr.io/mathieuclement/mystrom2mqtt:latest

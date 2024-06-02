@@ -18,7 +18,7 @@ class App:
     and subsequently make an HTTP request to the Switch itself to execute the state change.
     """
 
-    def __init__(self, devices, broker, port=1883):
+    def __init__(self, devices, broker, port=1883, username='', password=''):
         """
         Connects to the MQTT broker, which will also trigger it to subscribe to the appropriate topics if successful.
         
@@ -42,6 +42,8 @@ class App:
         self.devices_map = {device.identifier : device for device in devices}
 
         self.mqtt_client = mqtt.Client()
+        if username and password:
+            self.mqtt_client.username_pw_set(username, password)
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
 
@@ -143,8 +145,16 @@ if __name__ == '__main__':
     # specifies the broker IP address or hostname. See App.__init__ pydoc for more information if you wish to set a different port
     # than the default (1883).
     broker = os.environ['BROKER']
+
+    # MQTT_USER environment variable
+    # specifies the username to connect to MQTT broker
+    mqtt_user = os.environ['MQTT_USER']
     
-    app = App(switches, broker)
+    # MQTT_PASSWORD environment variable
+    # specifies the password to connect to MQTT broker
+    mqtt_password = os.environ['MQTT_PASSWORD']
+    
+    app = App(switches, broker, 1883, mqtt_user, mqtt_password)
 
     # POLLING_PERIOD environment variable, in seconds. Disabled by default.
     # This controls how often the "/report" is fetched to update the device state.
