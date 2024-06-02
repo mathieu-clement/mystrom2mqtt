@@ -32,6 +32,12 @@ class App:
 
         port : int, optional
             The port number of the broker. 1883 by default. 8883 (TLS) might work but it has not been tested.
+
+        user : string, optional
+            Username to authenticate to MQTT
+
+        password : string, optional
+            Password to authenticate to MQTT
         """
 
         self.devices = devices  
@@ -41,9 +47,12 @@ class App:
                 raise Exception('Device identifiers may not contain forward slashes (/) but "%s" does' % (device.identifier,))
         self.devices_map = {device.identifier : device for device in devices}
 
-        self.mqtt_client = mqtt.Client()
+        self.mqtt_client = mqtt.Client('mystrom2mqtt')
         if username != '' and password != '':
+            logging.info('Using MQTT with authentication')
             self.mqtt_client.username_pw_set(username, password)
+        else:
+            logging.info('Using MQTT without authentication')
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
 
