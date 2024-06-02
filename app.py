@@ -42,7 +42,7 @@ class App:
         self.devices_map = {device.identifier : device for device in devices}
 
         self.mqtt_client = mqtt.Client()
-        if username and password:
+        if username != '' and password != '':
             self.mqtt_client.username_pw_set(username, password)
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
