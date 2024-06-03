@@ -16,20 +16,20 @@ class HttpClient:
     Some hosts (such as my Swisscom Home Switch) refuse anything with the "Accept-Encoding" header
     and I couldn't find a way to prevent the HTTP libraries in Python
     to send them.
-    Curl, in comparison, does not send it by default.
+    Curl, in comparison, does not send it by default. It also has some nice built-in retry mechanism.
 
     This is an http client that relies on curl to make requests.
     """
 
     def get(self, url):
         logging.debug('HTTP request: ' + url)
-        timeout = '30' # seconds
+        timeout = '90' # seconds
         process = subprocess.Popen(['curl', 
                                     '--location', 
-                                    '--max-time', timeout, 
-                                    '--retry 10',
-                                    '--retry-max-time', timeout,
-                                    '--retry-connrefused',
+                                    '--retry', str(5),
+                                    '--retry-max-time', str(10), 
+                                    '--retry-all-errors',
+                                    '--max-time', timeout,
                                     '-s', 
                                     url], 
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
