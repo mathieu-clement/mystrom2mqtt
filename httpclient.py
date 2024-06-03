@@ -45,7 +45,7 @@ class HttpClient:
             elif process.returncode == 28:
                 message = "The request timed out"
             elif process.returncode != 0:
-                message = "curl exited with code " + str(process.returncode)
+                message = "curl exited with code " + str(process.returncode) + ". stderr: " + stderr.decode()
 
             raise HttpException(message, process.returncode, response)
 
