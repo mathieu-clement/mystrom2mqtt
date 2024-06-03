@@ -23,7 +23,16 @@ class HttpClient:
 
     def get(self, url):
         logging.debug('HTTP request: ' + url)
-        process = subprocess.Popen(['curl', '--location', '--max-time', str(5), '-s', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        timeout = '30' # seconds
+        process = subprocess.Popen(['curl', 
+                                    '--location', 
+                                    '--max-time', timeout, 
+                                    '--retry 10',
+                                    '--retry-max-time', timeout,
+                                    '--retry-connrefused',
+                                    '-s', 
+                                    url], 
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         response = stdout.decode('utf-8')
         logging.debug("Host response: " + response)
