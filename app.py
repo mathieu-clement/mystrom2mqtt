@@ -4,6 +4,7 @@ import ischedule
 import logging
 import os
 import paho.mqtt.client as mqtt
+import signal
 import sys
 
 # Local packages
@@ -63,6 +64,10 @@ class App:
 
     def loop_forever(self):
         self.mqtt_client.loop_forever()
+
+    def stop(self):
+        self.mqtt_client.disconnect()
+        self.mqtt_client.loop_stop()
 
 
     def on_mqtt_connect(self, client, userdata, flags, rc):
@@ -179,5 +184,14 @@ if __name__ == '__main__':
     # To test this app, you can use mosquitto_pub and mosquitto_sub. For example:
     # mosquitto_sub -h 192.168.0.2 -t 'mystrom/A4CF12FA3802/relay'
     # mosquitto_pub -h 192.168.0.2 -t 'mystrom/A4CF12FA3802/relay/command' -m 'on' 
+
+    def signal_handler(signum, frame):
+        logging.info('Received signal ' + str(signum) + '. Exiting...')
+        app.stop()
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT,  signal_handler)
+    signal.signal(signal.SIGHUP,  signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
 
     app.loop_forever()
